@@ -1,10 +1,10 @@
-pretrained_model_name_or_path: Qwen/Qwen-Image
+pretrained_model_name_or_path: ./models/Qwen/Qwen-Image
 data_config:
   train_batch_size: 1
   num_workers: 4
   img_size: 1024
   caption_dropout_rate: 0.1
-  img_dir: ./your_lora_dataset
+  img_dir: ./datasets/lol
   random_ratio: false # support multi crop preprocessing
   caption_type: txt
 report_to: null
