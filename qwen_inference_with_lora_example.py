@@ -10,7 +10,7 @@ from diffusers import QwenImagePipeline
 def main():
     # 设置参数
     model_name = "./models/Qwen-Image"
-    lora_path = "local:/root/autodl-tmp/flymyai-lora-trainer/output/checkpoint-500/pytorch_lora_weights.safetensors"  # 你的LoRA权重路径
+    lora_path = "/root/autodl-tmp/flymyai-lora-trainer/output/checkpoint-500/pytorch_lora_weights.safetensors"  # 你的LoRA权重路径
     prompt = "A legendary warrior stands atop a mountain peak, wielding an ancient magical sword that glows with ethereal blue light. Clad in ornate armor with intricate engravings, the figure commands respect and power. The warrior's cape flows dramatically in the wind as storm clouds gather overhead, lightning illuminating the battlefield below. This is a champion of justice, ready to face any challenge with unwavering determination and mystical abilities."
     output_path = "generated_with_lora.png"
     
@@ -36,7 +36,7 @@ def main():
     # 加载LoRA权重
     print(f"正在加载LoRA权重: {lora_path}")
     try:
-        pipe.load_lora_weights(lora_path)
+        pipe.load_lora_weights(lora_path, adapter_name="lora")
         print("✅ LoRA权重加载成功")
     except Exception as e:
         print(f"❌ LoRA权重加载失败: {e}")
