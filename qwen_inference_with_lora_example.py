@@ -10,7 +10,7 @@ from diffusers import QwenImagePipeline
 def main():
     # 设置参数
     model_name = "./models/Qwen-Image"
-    lora_path = "/root/autodl-tmp/flymyai-lora-trainer/output/checkpoint-500/pytorch_lora_weights.safetensors"  # 你的LoRA权重路径
+    lora_path = "/root/autodl-tmp/flymyai-lora-trainer/output/checkpoint-500"  # 你的LoRA权重路径
     prompt = "A legendary warrior stands atop a mountain peak, wielding an ancient magical sword that glows with ethereal blue light. Clad in ornate armor with intricate engravings, the figure commands respect and power. The warrior's cape flows dramatically in the wind as storm clouds gather overhead, lightning illuminating the battlefield below. This is a champion of justice, ready to face any challenge with unwavering determination and mystical abilities."
     output_path = "generated_with_lora.png"
     
@@ -36,17 +36,9 @@ def main():
     # 加载LoRA权重
     print(f"正在加载LoRA权重: {lora_path}")
     try:
-        import os
-        # 获取目录和文件名
-        lora_dir = os.path.dirname(lora_path)
-        weight_name = os.path.basename(lora_path)
-
-        print(f"LoRA目录: {lora_dir}")
-        print(f"权重文件名: {weight_name}")
-
         pipe.load_lora_weights(
-            lora_dir,
-            weight_name=weight_name,
+            lora_path,
+            weight_name="checkpoint-500",
             local_files_only=True,
             adapter_name="lora"
         )
