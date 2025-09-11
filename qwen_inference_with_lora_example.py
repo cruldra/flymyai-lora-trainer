@@ -38,7 +38,7 @@ def main():
     try:
         pipe.load_lora_weights(
             lora_path,
-            weight_name="checkpoint-500",
+            weight_name="pytorch_lora_weights.safetensors",
             local_files_only=True,
             adapter_name="lora"
         )
