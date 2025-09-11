@@ -3,6 +3,7 @@
 加载你训练的LoRA权重并生成图片
 """
 
+import os
 import torch
 from diffusers import QwenImagePipeline
 
@@ -35,6 +36,8 @@ def main():
     
     # 加载LoRA权重
     print(f"正在加载LoRA权重: {lora_path}")
+    os.environ['TRANSFORMERS_OFFLINE'] = '0'
+
     try:
         pipe.load_lora_weights(
             lora_path,
