@@ -36,7 +36,7 @@ def main():
     # 加载LoRA权重
     print(f"正在加载LoRA权重: {lora_path}")
     try:
-        pipe.load_lora_weights(lora_path, adapter_name="lora")
+        pipe.load_lora_weights(lora_path,  local_files_only=True, adapter_name="lora")
         print("✅ LoRA权重加载成功")
     except Exception as e:
         print(f"❌ LoRA权重加载失败: {e}")
