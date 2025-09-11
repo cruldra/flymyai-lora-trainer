@@ -36,7 +36,20 @@ def main():
     # 加载LoRA权重
     print(f"正在加载LoRA权重: {lora_path}")
     try:
-        pipe.load_lora_weights(lora_path,  local_files_only=True, adapter_name="lora")
+        import os
+        # 获取目录和文件名
+        lora_dir = os.path.dirname(lora_path)
+        weight_name = os.path.basename(lora_path)
+
+        print(f"LoRA目录: {lora_dir}")
+        print(f"权重文件名: {weight_name}")
+
+        pipe.load_lora_weights(
+            lora_dir,
+            weight_name=weight_name,
+            local_files_only=True,
+            adapter_name="lora"
+        )
         print("✅ LoRA权重加载成功")
     except Exception as e:
         print(f"❌ LoRA权重加载失败: {e}")
