@@ -46,8 +46,6 @@ debug.ipynb
 flymy_wan2/ckpts/
 ckpts/
 *.mp4
-*.png
-*.jpg
 *.jpeg
 *.gif
 *.webp
