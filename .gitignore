@@ -50,3 +50,4 @@ ckpts/
 *.gif
 *.webp
 !assets/*
+__marimo__/
