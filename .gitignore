@@ -53,3 +53,4 @@ ckpts/
 __marimo__/
 unsloth_compiled_cache/
 .idea/
+data/
