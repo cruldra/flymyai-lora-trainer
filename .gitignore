@@ -54,3 +54,4 @@ __marimo__/
 unsloth_compiled_cache/
 .idea/
 data/
+milvus_docs/
