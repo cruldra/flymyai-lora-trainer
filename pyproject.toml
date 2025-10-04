@@ -5,13 +5,20 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "cohere>=5.18.0",
+    "dashscope>=1.24.6",
     "feast>=0.54.0",
+    "ipython>=9.6.0",
     "marimo>=0.16.5",
     "matplotlib>=3.10.6",
     "numpy>=2.3.3",
+    "openai>=2.1.0",
     "pandas>=2.3.3",
     "polars>=1.34.0",
     "pyarrow>=17.0.0",
+    "python-dotenv>=1.1.1",
+    "qdrant-client>=1.15.1",
     "scikit-learn>=1.7.2",
     "seaborn>=0.13.2",
+    "sentence-transformers>=5.1.1",
 ]
