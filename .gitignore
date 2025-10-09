@@ -56,4 +56,4 @@ unsloth_compiled_cache/
 data/
 milvus_docs/
 chroma_db/
-train_configs/
+train_configs/*
