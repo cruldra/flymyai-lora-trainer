@@ -5,8 +5,11 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "bitsandbytes>=0.48.1",
+    "chromadb>=1.1.0",
     "cohere>=5.18.0",
     "dashscope>=1.24.6",
+    "datasets>=4.0.0",
     "feast>=0.54.0",
     "ipython>=9.6.0",
     "marimo>=0.16.5",
@@ -22,4 +25,9 @@ dependencies = [
     "scikit-learn>=1.7.2",
     "seaborn>=0.13.2",
     "sentence-transformers>=5.1.1",
+    "trl>=0.23.1",
+    "unsloth>=2024.8",
+    "xformers>=0.0.32.post2",
 ]
+[tool.uv.extra-build-dependencies]
+xformers = ["torch"]
