@@ -5,12 +5,15 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "crewai[tools]>=0.203.0",
     "datasets>=3.6.0",
     "ipython>=8.17.2",
     "marimo>=0.16.5",
+    "nest-asyncio>=1.6.0",
     "numpy>=1.26.4",
     "pandas>=2.3.2",
     "safetensors>=0.6.2",
+    "stagehand>=0.5.4",
     "torch>=2.7.1",
     "transformers>=4.55.4",
     "trl>=0.21.0",
