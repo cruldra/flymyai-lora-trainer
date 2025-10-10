@@ -6,7 +6,7 @@ app = marimo.App()
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""### Introduction""")
+    mo.md(r"""### 简介""")
     return
 
 
@@ -14,9 +14,9 @@ def _(mo):
 def _(mo):
     mo.md(
         r"""
-    Goal: To convert `Qwen3-4B-Base` into a reasoning model via GRPO by using OpenR1's Math dataset.
+    目标：使用 OpenR1 的数学数据集，通过 GRPO 将 `Qwen3-4B-Base` 转换为推理模型。
 
-    We first pre fine-tune the model to make GRPO skip trying to match formatting - this speeds GRPO up.
+    我们首先对模型进行预微调，使 GRPO 跳过尝试匹配格式 - 这会加速 GRPO 训练。
     """
     )
     return
@@ -26,27 +26,27 @@ def _(mo):
 def _():
     from unsloth import FastLanguageModel
     import torch
-    max_seq_length = 2048 # Can increase for longer reasoning traces
-    lora_rank = 32 # Larger rank = smarter, but slower
+    max_seq_length = 2048 # 可以增加以支持更长的推理轨迹
+    lora_rank = 32 # 更大的 rank = 更智能，但更慢
 
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name = "unsloth/Qwen3-4B-Base",
         max_seq_length = max_seq_length,
-        load_in_4bit = False, # False for LoRA 16bit
-        fast_inference = True, # Enable vLLM fast inference
+        load_in_4bit = False, # LoRA 16bit 设置为 False
+        fast_inference = False, # 启用 vLLM 快速推理
         max_lora_rank = lora_rank,
-        gpu_memory_utilization = 0.7, # Reduce if out of memory
+        gpu_memory_utilization = 0.7, # 如果内存不足请减小
     )
 
     model = FastLanguageModel.get_peft_model(
         model,
-        r = lora_rank, # Choose any number > 0 ! Suggested 8, 16, 32, 64, 128
+        r = lora_rank, # 选择任何 > 0 的数字！建议 8, 16, 32, 64, 128
         target_modules = [
             "q_proj", "k_proj", "v_proj", "o_proj",
             "gate_proj", "up_proj", "down_proj",
         ],
-        lora_alpha = lora_rank*2, # *2 speeds up training
-        use_gradient_checkpointing = "unsloth", # Reduces memory usage
+        lora_alpha = lora_rank*2, # *2 加速训练
+        use_gradient_checkpointing = "unsloth", # 减少内存使用
         random_state = 3407,
     )
     return max_seq_length, model, tokenizer, torch
@@ -56,10 +56,10 @@ def _():
 def _(mo):
     mo.md(
         r"""
-    ### GRPO chat template
-    Since we're using a base model, we should set a chat template. You can make your own chat template as well!
-    1. DeepSeek uses `<think>` and `</think>`, but this is **not** necessary - you can customize it however you like!
-    2. A `system_prompt` is recommended to at least guide the model's responses.
+    ### GRPO 对话模板
+    由于我们使用的是基础模型，应该设置一个对话模板。你也可以创建自己的对话模板！
+    1. DeepSeek 使用 `<think>` 和 `</think>`，但这**不是**必需的 - 你可以随意自定义！
+    2. 建议使用 `system_prompt` 至少引导模型的响应。
     """
     )
     return
@@ -67,16 +67,16 @@ def _(mo):
 
 @app.cell
 def _():
-    reasoning_start = "<think>" 
-    reasoning_end   = "</think>"  
+    reasoning_start = "<think>"
+    reasoning_end   = "</think>"
     solution_start  = "<SOLUTION>"
     solution_end    = "</SOLUTION>"
 
     system_prompt = \
-    f"""You are given a problem.
-    Think about the problem and provide your working out.
-    Place it between {reasoning_start} and {reasoning_end}.
-    Then, provide your solution between {solution_start}{solution_end}"""
+    f"""你会得到一个问题。
+    思考这个问题并提供你的解题过程。
+    将其放在 {reasoning_start} 和 {reasoning_end} 之间。
+    然后，在 {solution_start}{solution_end} 之间提供你的解决方案"""
     system_prompt
     return (
         reasoning_end,
@@ -89,7 +89,7 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""We create a simple chat template below. Notice `add_generation_prompt` includes prepending `<think>` to guide the model to start its reasoning process.""")
+    mo.md(r"""我们在下面创建一个简单的对话模板。注意 `add_generation_prompt` 包括在前面添加 `<think>` 以引导模型开始其推理过程。""")
     return
 
 
@@ -123,16 +123,16 @@ def _(reasoning_start, system_prompt, tokenizer):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""Let's see how our chat template behaves on an example:""")
+    mo.md(r"""让我们看看对话模板在示例上的表现：""")
     return
 
 
 @app.cell
 def _(reasoning_end, reasoning_start, solution_end, solution_start, tokenizer):
     tokenizer.apply_chat_template([
-        {"role" : "user", "content" : "What is 1+1?"},
-        {"role" : "assistant", "content" : f"{reasoning_start}I think it's 2.{reasoning_end}{solution_start}2{solution_end}"},
-        {"role" : "user", "content" : "What is 2+2?"},
+        {"role" : "user", "content" : "1+1 等于多少？"},
+        {"role" : "assistant", "content" : f"{reasoning_start}我认为是 2。{reasoning_end}{solution_start}2{solution_end}"},
+        {"role" : "user", "content" : "2+2 等于多少？"},
     ], tokenize = False, add_generation_prompt = True)
     return
 
@@ -141,10 +141,10 @@ def _(reasoning_end, reasoning_start, solution_end, solution_start, tokenizer):
 def _(mo):
     mo.md(
         r"""
-    ### Pre fine-tuning for formatting
-    We now use a subset of NVIDIA's [Open Math Reasoning dataset](https://huggingface.co/datasets/nvidia/OpenMathReasoning) which was filtered to only include high quality DeepSeek R1 traces.
+    ### 格式化预微调
+    我们现在使用 NVIDIA 的 [Open Math Reasoning 数据集](https://huggingface.co/datasets/nvidia/OpenMathReasoning) 的一个子集，该子集已过滤为仅包含高质量的 DeepSeek R1 轨迹。
 
-    We'll only filter ~59 or so examples to first "prime" / pre fine-tune the model to understand our custom GRPO formatting.
+    我们只会过滤约 59 个示例，首先"启动"/预微调模型以理解我们的自定义 GRPO 格式。
     """
     )
     return
@@ -161,9 +161,9 @@ def _():
         ["expected_answer", "problem", "generated_solution"]
     ]
 
-    # Try converting to number - if not, replace with NaN
+    # 尝试转换为数字 - 如果不行，替换为 NaN
     is_number = pd.to_numeric(pd.Series(dataset["expected_answer"]), errors = "coerce").notnull()
-    # Select only numbers
+    # 只选择数字
     dataset = dataset.iloc[np.where(is_number)[0]]
 
     dataset
@@ -172,7 +172,7 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""We have to format the dataset to follow our GRPO style formatting:""")
+    mo.md(r"""我们必须格式化数据集以遵循我们的 GRPO 风格格式：""")
     return
 
 
@@ -189,13 +189,13 @@ def _(
         expected_answer = x["expected_answer"]
         problem = x["problem"]
 
-        # Remove generated <think> and </think>
+        # 移除生成的 <think> 和 </think>
         thoughts = x["generated_solution"]
         thoughts = thoughts.replace("<think>", "").replace("</think>", "")
 
-        # Strip newlines on left and right
+        # 去除左右两侧的换行符
         thoughts = thoughts.strip()
-        # Add our custom formatting
+        # 添加我们的自定义格式
         final_prompt = \
             reasoning_start + thoughts + reasoning_end + \
             solution_start + expected_answer + solution_end
@@ -211,7 +211,7 @@ def _(
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""Check to see if it worked:""")
+    mo.md(r"""检查是否成功：""")
     return
 
 
@@ -225,9 +225,9 @@ def _(dataset, tokenizer):
 def _(mo):
     mo.md(
         r"""
-    Let's truncate the pre fine-tuning dataset to `max_seq_length/2` since we don't want too long reasoning traces.
+    让我们将预微调数据集截断为 `max_seq_length/2`，因为我们不想要太长的推理轨迹。
 
-    Note this might take 2 minutes!
+    注意这可能需要 2 分钟！
     """
     )
     return
@@ -243,7 +243,7 @@ def _(dataset, max_seq_length, tokenizer):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""We then tokenize the messages and convert it to a Hugging Face compatible dataset format:""")
+    mo.md(r"""然后我们对消息进行分词并将其转换为 Hugging Face 兼容的数据集格式：""")
     return
 
 
@@ -258,14 +258,14 @@ def _(dataset_1, tokenizer):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""Let's now pre fine-tune the model so it follows our custom GRPO formatting!""")
+    mo.md(r"""现在让我们预微调模型，使其遵循我们的自定义 GRPO 格式！""")
     return
 
 
 @app.cell
 def _(dataset_2, model, tokenizer):
     from trl import SFTTrainer, SFTConfig
-    trainer = SFTTrainer(model=model, tokenizer=tokenizer, train_dataset=dataset_2, args=SFTConfig(dataset_text_field='text', per_device_train_batch_size=1, gradient_accumulation_steps=1, warmup_steps=5, num_train_epochs=2, learning_rate=0.0002, logging_steps=5, optim='adamw_8bit', weight_decay=0.01, lr_scheduler_type='linear', seed=3407, report_to='none'))  # Use GA to mimic batch size!  # Set this for 1 full training run.  # Reduce to 2e-5 for long training runs  # Use this for WandB etc
+    trainer = SFTTrainer(model=model, tokenizer=tokenizer, train_dataset=dataset_2, args=SFTConfig(dataset_text_field='text', per_device_train_batch_size=1, gradient_accumulation_steps=1, warmup_steps=5, num_train_epochs=2, learning_rate=0.0002, logging_steps=5, optim='adamw_8bit', weight_decay=0.01, lr_scheduler_type='linear', seed=3407, report_to='none'))  # 使用 GA 模拟批次大小！  # 设置为 1 进行完整训练  # 长时间训练时减少到 2e-5  # 用于 WandB 等
     return (trainer,)
 
 
@@ -277,7 +277,7 @@ def _(trainer):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""Let's check if the model has learnt to follow the custom format:""")
+    mo.md(r"""让我们检查模型是否学会了遵循自定义格式：""")
     return
 
 
@@ -291,7 +291,7 @@ def _(dataset_2, model, tokenizer):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""Yes it did follow the formatting! Great! Let's remove some items before the GRPO step""")
+    mo.md(r"""是的，它确实遵循了格式！太好了！让我们在 GRPO 步骤之前删除一些项目""")
     return
 
 
@@ -308,10 +308,10 @@ def _(dataset_2, torch):
 def _(mo):
     mo.md(
         r"""
-    ### Data Prep
+    ### 数据准备
     <a name="Data"></a>
 
-    We're using Hugging Face's [Open R1 Math dataset](https://huggingface.co/datasets/open-r1/DAPO-Math-17k-Processed). You can also utilize OpenAI's famous [GSM8K dataset](https://huggingface.co/datasets/openai/gsm8k)
+    我们使用 Hugging Face 的 [Open R1 Math 数据集](https://huggingface.co/datasets/open-r1/DAPO-Math-17k-Processed)。你也可以使用 OpenAI 著名的 [GSM8K 数据集](https://huggingface.co/datasets/openai/gsm8k)
     """
     )
     return
@@ -326,7 +326,7 @@ def _(load_dataset):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""Let's look at the first row:""")
+    mo.md(r"""让我们看看第一行：""")
     return
 
 
@@ -344,21 +344,21 @@ def _(dataset_3):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""In GSM8K, ee notice all answers like about have a ####, so we extract it. But for the Open R1 dataset, we can skip the below.""")
+    mo.md(r"""在 GSM8K 中，我们注意到所有答案都有 ####，所以我们提取它。但对于 Open R1 数据集，我们可以跳过下面的步骤。""")
     return
 
 
 @app.cell
 def _(dataset_3):
     def extract_hash_answer(text):
-        return _text
+        return text
     extract_hash_answer(dataset_3[0]['solution'])
     return (extract_hash_answer,)
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""Let's map the dataset! and see the first row:""")
+    mo.md(r"""让我们映射数据集！并查看第一行：""")
     return
 
 
@@ -371,7 +371,7 @@ def _(dataset_3, extract_hash_answer, system_prompt):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""We create a regex format to match the reasoning sections and answers:""")
+    mo.md(r"""我们创建一个正则表达式格式来匹配推理部分和答案：""")
     return
 
 
@@ -379,7 +379,7 @@ def _(mo):
 def _(reasoning_end, solution_start, tokenizer):
     import re
 
-    # Add optional EOS token matching
+    # 添加可选的 EOS token 匹配
     solution_end_regex = r"</SOLUTION>[\s]{0,}" + \
         "(?:" + re.escape(tokenizer.eos_token) + ")?"
 
@@ -395,7 +395,7 @@ def _(reasoning_end, solution_start, tokenizer):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""We verify it works:""")
+    mo.md(r"""我们验证它是否有效：""")
     return
 
 
@@ -419,7 +419,7 @@ def _(match_format):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""We now want to create a reward function to match the format exactly - we reward it with 3 points if it succeeds:""")
+    mo.md(r"""现在我们想创建一个奖励函数来精确匹配格式 - 如果成功，我们奖励 3 分：""")
     return
 
 
@@ -430,7 +430,7 @@ def _(match_format):
         for completion in completions:
             score = 0
             response = completion[0]['content']
-            if match_format.search(response) is not None:  # Match if format is seen exactly!
+            if match_format.search(response) is not None:  # 如果格式完全匹配则奖励！
                 score = score + 3.0
             scores.append(score)
         return scores
@@ -439,7 +439,7 @@ def _(match_format):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""If it fails, we want to reward the model if it at least follows the format partially, by counting each symbol:""")
+    mo.md(r"""如果失败，我们希望在模型至少部分遵循格式时奖励它，通过计算每个符号：""")
     return
 
 
@@ -450,17 +450,17 @@ def _(reasoning_end, solution_end, solution_start):
         for completion in completions:
             score = 0
             response = completion[0]['content']
-            score = score + (0.5 if response.count(reasoning_end) == 1 else -1.0)  # Count how many keywords are seen - we penalize if too many!
-            score = score + (0.5 if response.count(solution_start) == 1 else -1.0)  # If we see 1, then plus some points!
+            score = score + (0.5 if response.count(reasoning_end) == 1 else -1.0)  # 计算看到多少关键字 - 如果太多则惩罚！
+            score = score + (0.5 if response.count(solution_start) == 1 else -1.0)  # 如果看到 1 个，则加一些分！
             score = score + (0.5 if response.count(solution_end) == 1 else -1.0)
-            scores.append(score)  # No need to reward <start_working_out> since we always prepend it!
+            scores.append(score)  # 不需要奖励 <start_working_out>，因为我们总是在前面添加它！
         return scores  # score += 0.5 if response.count(reasoning_start) == 1 else -1.0
     return (match_format_approximately,)
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""Finally, we want to extract the generated answer, and reward or penalize it! We also reward it based on how close the answer is to the true one via ratios:""")
+    mo.md(r"""最后，我们想提取生成的答案，并奖励或惩罚它！我们还根据答案与真实答案的接近程度通过比率来奖励：""")
     return
 
 
@@ -482,17 +482,17 @@ def _(match_format):
                 score = score + 3.5
             else:
                 try:
-                    ratio = float(guess) / float(true_answer)  # Correct answer gets 5 points!
+                    ratio = float(guess) / float(true_answer)  # 正确答案得 5 分！
                     if ratio >= 0.9 and ratio <= 1.1:
                         score = score + 2.0
-                    elif ratio >= 0.8 and ratio <= 1.2:  # Match if spaces are seen, but less reward
+                    elif ratio >= 0.8 and ratio <= 1.2:  # 如果看到空格则匹配，但奖励较少
                         score = score + 1.5
                     else:
                         score = score - 2.5
-                except:  # We also reward it if the answer is close via ratios!
-                    score = score - 4.5  # Ie if the answer is within some range, reward it!
+                except:  # 如果答案通过比率接近，我们也会奖励！
+                    score = score - 4.5  # 即如果答案在某个范围内，则奖励！
             scores.append(score)
-        return scores  # Penalize wrong answers  # Penalize
+        return scores  # 惩罚错误答案  # 惩罚
     return (check_answer,)
 
 
@@ -500,9 +500,9 @@ def _(match_format):
 def _(mo):
     mo.md(
         r"""
-    Also sometimes it might not be 1 number as the answer, but like a sentence for example "The solution is $20" -> we extract 20.
+    有时答案可能不是 1 个数字，而是像一个句子，例如"解决方案是 $20" -> 我们提取 20。
 
-    We also remove possible commas for example as in 123,456
+    我们还删除可能的逗号，例如 123,456
     """
     )
     return
@@ -523,7 +523,7 @@ def _(re, solution_start):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""We now prepare our main function which will print out the generated responses and the true answer, along with another reward function which converts text to float via `float` and sees if it's the same.""")
+    mo.md(r"""我们现在准备主函数，它将打印生成的响应和真实答案，以及另一个奖励函数，该函数通过 `float` 将文本转换为浮点数并查看是否相同。""")
     return
 
 
@@ -542,10 +542,10 @@ def _(match_numbers):
         global PRINTED_TIMES
         global PRINT_EVERY_STEPS
         if PRINTED_TIMES % PRINT_EVERY_STEPS == 0:
-            print('*' * 20 + f'Question:\n{question}', f'\nAnswer:\n{answer[0]}', f'\nResponse:\n{responses[0]}', f'\nExtracted:\n{extracted_responses[0]}')
+            print('*' * 20 + f'问题:\n{question}', f'\n答案:\n{answer[0]}', f'\n响应:\n{responses[0]}', f'\n提取:\n{extracted_responses[0]}')
         PRINTED_TIMES = PRINTED_TIMES + 1
         for guess, true_answer in zip(extracted_responses, answer):
-            if guess is None:  # Print only every few steps
+            if guess is None:  # 只每隔几步打印一次
                 scores.append(-2.5)
                 continue
             try:
@@ -555,7 +555,7 @@ def _(match_numbers):
             except:
                 scores.append(0)
                 continue
-        return scores  # Convert to numbers  # Remove commas like in 123,456
+        return scores  # 转换为数字  # 删除逗号，如 123,456
     return PRINTED_TIMES, PRINT_EVERY_STEPS, check_numbers
 
 
@@ -563,9 +563,9 @@ def _(match_numbers):
 def _(mo):
     mo.md(
         r"""
-    Get the top 90% prompt length so we don't accidentally truncate them!
+    获取前 90% 的提示长度，这样我们就不会意外截断它们！
 
-    Ie we'll remove the top 10% long prompts.
+    即我们将删除前 10% 的长提示。
     """
     )
     return
@@ -577,9 +577,9 @@ def _(dataset_4, np, tokenizer):
     print(tokenizer.decode(tokenized[0]['tokens']))
     tokenized = tokenized.map(lambda x: {'L': len(x['tokens'])})
     maximum_length = int(np.quantile(tokenized['L'], 0.9))
-    print('Max Length = ', maximum_length)
+    print('最大长度 = ', maximum_length)
     dataset_5 = dataset_4.select(np.where(np.array(tokenized['L']) <= maximum_length)[0])
-    # Filter only samples smaller than 90% max length
+    # 只过滤小于 90% 最大长度的样本
     del tokenized
     return dataset_5, maximum_length
 
@@ -589,9 +589,9 @@ def _(mo):
     mo.md(
         r"""
     <a name="Train"></a>
-    ### Train the model
+    ### 训练模型
 
-    Now set up GRPO Trainer and all configurations!
+    现在设置 GRPO Trainer 和所有配置！
     """
     )
     return
@@ -599,7 +599,7 @@ def _(mo):
 
 @app.cell
 def _(max_seq_length, maximum_length, tokenizer):
-    max_prompt_length = maximum_length + 1 # + 1 just in case!
+    max_prompt_length = maximum_length + 1 # + 1 以防万一！
     max_completion_length = max_seq_length - max_prompt_length
 
     from vllm import SamplingParams
@@ -623,17 +623,17 @@ def _(max_seq_length, maximum_length, tokenizer):
         optim = "adamw_8bit",
         logging_steps = 1,
         per_device_train_batch_size = 1,
-        gradient_accumulation_steps = 1, # Increase to 4 for smoother training
-        num_generations = 4, # Decrease if out of memory
+        gradient_accumulation_steps = 1, # 增加到 4 以获得更平滑的训练
+        num_generations = 4, # 如果内存不足请减少
         max_prompt_length = max_prompt_length,
         max_completion_length = max_completion_length,
-        # num_train_epochs = 1, # Set to 1 for a full training run
+        # num_train_epochs = 1, # 设置为 1 进行完整训练
         max_steps = 100,
         save_steps = 100,
-        report_to = "none", # Can use Weights & Biases
+        report_to = "none", # 可以使用 Weights & Biases
         output_dir = "outputs",
 
-        # For optional training + evaluation
+        # 可选的训练 + 评估
         # fp16_full_eval = True,
         # per_device_eval_batch_size = 4,
         # eval_accumulation_steps = 1,
@@ -647,9 +647,9 @@ def _(max_seq_length, maximum_length, tokenizer):
 def _(mo):
     mo.md(
         r"""
-    And let's run the trainer! If you scroll up, you'll see a table of rewards. The goal is to see the `reward` column increase!
+    让我们运行训练器！如果你向上滚动，你会看到一个奖励表。目标是看到 `reward` 列增加！
 
-    You might have to wait 150 to 200 steps for any action. You'll probably get 0 reward for the first 100 steps. Please be patient!
+    你可能需要等待 150 到 200 步才能看到任何效果。前 100 步你可能会得到 0 奖励。请耐心等待！
 
     | Step | Training Loss | reward    | reward_std | completion_length | kl       |
     |------|---------------|-----------|------------|-------------------|----------|
@@ -673,10 +673,10 @@ def _(
     tokenizer,
     training_args,
 ):
-    # For optional training + evaluation
+    # 可选的训练 + 评估
     # new_dataset = dataset.train_test_split(test_size = 0.01)
     trainer_1 = GRPOTrainer(model=model, processing_class=tokenizer, reward_funcs=[match_format_exactly, match_format_approximately, check_answer, check_numbers], args=training_args, train_dataset=dataset_5)
-    trainer_1.train()  # For optional training + evaluation  # train_dataset = new_dataset["train"],  # eval_dataset = new_dataset["test"],
+    trainer_1.train()  # 可选的训练 + 评估  # train_dataset = new_dataset["train"],  # eval_dataset = new_dataset["test"],
     return
 
 
@@ -685,8 +685,8 @@ def _(mo):
     mo.md(
         r"""
     <a name="Inference"></a>
-    ### Inference
-    Now let's try the model we just trained! First, let's first try the model without any GRPO trained:
+    ### 推理
+    现在让我们试试刚刚训练的模型！首先，让我们先试试没有经过 GRPO 训练的模型：
     """
     )
     return
@@ -694,7 +694,7 @@ def _(mo):
 
 @app.cell
 def _(SamplingParams, model):
-    _text = 'What is the sqrt of 101?'
+    _text = '101 的平方根是多少？'
     _sampling_params = SamplingParams(temperature=1.0, top_k=50, max_tokens=1024)
     _output = model.fast_generate([_text], sampling_params=_sampling_params, lora_request=None)[0].outputs[0].text
     _output
@@ -703,7 +703,7 @@ def _(SamplingParams, model):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""And now with the LoRA we just trained with GRPO - we first save the LoRA first!""")
+    mo.md(r"""现在使用我们刚刚用 GRPO 训练的 LoRA - 我们首先保存 LoRA！""")
     return
 
 
@@ -715,7 +715,7 @@ def _(model):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""Verify LoRA is actually trained!""")
+    mo.md(r"""验证 LoRA 确实已训练！""")
     return
 
 
@@ -725,7 +725,7 @@ def _():
 
     tensors = {}
     with safe_open("grpo_saved_lora/adapter_model.safetensors", framework = "pt") as f:
-        # Verify both A and B are non zero
+        # 验证 A 和 B 都不为零
         for key in f.keys():
             tensor = f.get_tensor(key)
             n_zeros = (tensor == 0).sum() / tensor.numel()
@@ -735,13 +735,13 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""Now we load the LoRA and test:""")
+    mo.md(r"""现在我们加载 LoRA 并测试：""")
     return
 
 
 @app.cell
 def _(SamplingParams, model, system_prompt, tokenizer):
-    messages = [{'role': 'system', 'content': system_prompt}, {'role': 'user', 'content': 'What is the sqrt of 101?'}]
+    messages = [{'role': 'system', 'content': system_prompt}, {'role': 'user', 'content': '101 的平方根是多少？'}]
     _text = tokenizer.apply_chat_template(messages, add_generation_prompt=True, tokenize=False)
     _sampling_params = SamplingParams(temperature=1.0, top_k=50, max_tokens=2048)
     _output = model.fast_generate(_text, sampling_params=_sampling_params, lora_request=model.load_lora('grpo_saved_lora'))[0].outputs[0].text
@@ -751,7 +751,7 @@ def _(SamplingParams, model, system_prompt, tokenizer):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""Our reasoning model is much better - it's not always correct, since we only trained it for an hour or so - it'll be better if we extend the sequence length and train for longer!""")
+    mo.md(r"""我们的推理模型好多了 - 它并不总是正确的，因为我们只训练了大约一个小时 - 如果我们延长序列长度并训练更长时间，它会更好！""")
     return
 
 
